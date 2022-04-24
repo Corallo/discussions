@@ -1,2 +1,3 @@
-# discussions
-Repository acting as discussions for the organization.
+# Discussions
+
+Repository acting as [discussions](https://github.com/orgs/AxisCommunications/discussions) for the Axis Communications organization on GitHub.
