@@ -1,16 +1,11 @@
-name: Most helpful contributors
+name: CI
 
 on:
-  schedule:
-    - cron: '0 0 * * *'
+  push:
   workflow_dispatch:
 
-permissions:
-  contents: read
-  discussions: write
-
 jobs:
-  run:
+  scripts:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -22,6 +17,3 @@ jobs:
           node-version: lts/*
       - run: npm ci
       - run: npm run build
-      - run: node dist/most-helpful-contributors.js ${{ env.DISCUSSION_ID }} ${{ secrets.GITHUB_TOKEN }}
-        env:
-          DISCUSSION_ID: D_kwDOHOfQ684AUUSB
