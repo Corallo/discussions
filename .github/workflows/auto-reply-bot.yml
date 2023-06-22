@@ -1,46 +1,44 @@
 name: Auto-reply bot
 
 on:
-    discussion:
-        types: [created]
+  discussion:
+    types: [created]
 
 permissions:
-    discussions: write
-
-env:
-    BODY: >
-        *This automatically generated reply acts as a friendly reminder.*
-        
-        
-        *Answers to your questions will most often come from the community, from
-        developers like yourself. You will, from time to time, find that Axis
-        employees answers some of the questions, but this is not a guarantee.
-        Think of the discussion forum as a complement to other support channels,
-        not a replacement to any of them.*
-
-
-        *If your question remains unanswered for a period of time, please revisit it to see whether
-        it can be improved by following the guidelines listed in
-        [Axis support guidelines](https://github.com/orgs/AxisCommunications/discussions/13).*
+  discussions: write
 
 jobs:
-    auto_reply:
-        name: Auto reply
-        runs-on: ubuntu-latest
-        steps:
-            - run: |
-                gh api graphql \
-                    -F discussionId='${{ github.event.discussion.node_id }}' \
-                    -F body='${{ env.BODY }}' \
-                    -f query='
-                        mutation($discussionId: ID!, $body: String!) {
-                            addDiscussionComment(input: {
-                                discussionId: $discussionId,
-                                body: $body
-                            }) {
-                                clientMutationId
-                            }
-                        }
-                    '
-              env:
-                GH_TOKEN: ${{ github.token }}
+  auto_reply:
+    name: Auto reply
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          gh api graphql \
+            -F discussionId='${{ github.event.discussion.node_id }}' \
+            -F body='${{ env.BODY }}' \
+            -f query='
+              mutation($discussionId: ID!, $body: String!) {
+                addDiscussionComment(input: {
+                  discussionId: $discussionId,
+                  body: $body
+                }) {
+                  clientMutationId
+                }
+              }
+            '
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BODY: >
+            *This automatically generated reply acts as a friendly reminder.*
+
+
+            *Answers to your questions will most often come from the community, from
+            developers like yourself. You will, from time to time, find that Axis
+            employees answers some of the questions, but this is not a guarantee.
+            Think of the discussion forum as a complement to other support channels,
+            not a replacement to any of them.*
+
+
+            *If your question remains unanswered for a period of time, please revisit it to see whether
+            it can be improved by following the guidelines listed in
+            [Axis support guidelines](https://github.com/orgs/AxisCommunications/discussions/13).*
