@@ -1,4 +1,4 @@
-name: Discussions Bot
+name: Auto-reply bot
 
 on:
     discussion:
