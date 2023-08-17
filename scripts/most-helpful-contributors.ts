@@ -22,6 +22,10 @@ interface Count {
   count: number
 }
 
+const removeAuthor = (comments: Comment[], authorLogin: string): Comment[] => {
+  return comments.filter((c) => c.author.login !== authorLogin)
+}
+
 const filterAnswers = (comments: Comment[]): Count[] => {
   return comments
     .filter((c) => c.isAnswer)
@@ -107,7 +111,8 @@ const main = async () => {
 
   const [discussionId, personalAccessToken] = args
 
-  const comments = await listComments(ORGANIZATION_NAME, REPOSITORY_NAME, personalAccessToken)
+  let comments = await listComments(ORGANIZATION_NAME, REPOSITORY_NAME, personalAccessToken)
+  comments = removeAuthor(comments, "github-actions")
 
   const answers = filterAnswers(comments).sort(byCount).splice(0, 20)
   const interactions = filterInteractions(comments).sort(byCount).splice(0, 20)
