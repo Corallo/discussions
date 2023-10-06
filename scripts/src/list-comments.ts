@@ -2,12 +2,19 @@ import { Octokit } from "octokit"
 import { PageInfo, processPagedQuery } from "./paging"
 
 export interface Comment {
+  discussion: {
+    number: number
+  }
   author: Author
   isAnswer: boolean
   replies: Reply[]
 }
 
 export interface Reply {
+  discussion: {
+    number: number
+  }
+  isAnswer: boolean
   author: Author
 }
 
@@ -35,8 +42,9 @@ export const listComments = async (organizationName: string, repositoryName: str
   const comments: Comment[] = []
 
   for (const d of discussions) {
-    for (const { author, isAnswer, replies} of d.comments.nodes) {
+    for (const { discussion, isAnswer, author, replies} of d.comments.nodes) {
       comments.push({
+        discussion,
         isAnswer,
         author,
         replies: replies.nodes,
@@ -50,10 +58,17 @@ export const listComments = async (organizationName: string, repositoryName: str
 interface Discussion {
   comments: {
     nodes: {
+      discussion: {
+        number: number
+      }
       isAnswer: boolean
       author: Author
       replies: {
         nodes: {
+          discussion: {
+            number: number
+          }
+          isAnswer: boolean
           author: Author
         }[]
         pageInfo: PageInfo
@@ -71,6 +86,9 @@ const createQuery = (organizationName: string, repositoryName: string): string =
           nodes {
             comments(first: 20) {
               nodes {
+                discussion {
+                  number
+                }
                 isAnswer
                 author {
                   login
@@ -78,6 +96,10 @@ const createQuery = (organizationName: string, repositoryName: string): string =
                 }
                 replies(first: 20) {
                   nodes {
+                    discussion {
+                      number
+                    }
+                    isAnswer
                     author {
                       login
                       resourcePath

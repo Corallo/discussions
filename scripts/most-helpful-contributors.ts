@@ -1,4 +1,4 @@
-import { Author, Comment, listComments } from "./src/list-comments"
+import { Author, Comment, Reply, listComments } from "./src/list-comments"
 import { updateDiscussion } from "./src/update-discussion"
 
 export const ORGANIZATION_NAME = "AxisCommunications"
@@ -17,7 +17,7 @@ const usage = () => {
   console.log()
 }
 
-interface Count {
+interface AuthorCount {
   author: Author
   count: number
 }
@@ -26,50 +26,71 @@ const removeAuthor = (comments: Comment[], authorLogin: string): Comment[] => {
   return comments.filter((c) => c.author.login !== authorLogin)
 }
 
-const filterAnswers = (comments: Comment[]): Count[] => {
-  return comments
-    .filter((c) => c.isAnswer)
-    .reduce<Count[]>((result, comment) => {
-      let item = result.find((i) => i.author.login === comment.author.login)
-      if (!item) {
-        item = {
-          author: comment.author,
-          count: 0,
-        }
-        result.push(item)
-      }
+const handleComment = (comment: Comment, authorCounts: AuthorCount[]) => {
+  let authorCount = authorCounts.find((ac) => ac.author.login === comment.author.login)
+  if (!authorCount) {
+    authorCount = {
+      author: comment.author,
+      count: 0,
+    }
+    authorCounts.push(authorCount)
+  }
 
-      item.count++
-
-      return result
-    }, [])
+  authorCount.count++
 }
 
-const filterInteractions = (comments: Comment[]): Count[] => {
-  return [...comments.map((c) => c.author), ...comments.flatMap((c) => c.replies.map((r) => r.author))].reduce<Count[]>(
-    (result, author) => {
-      let item = result.find((i) => i.author.login === author.login)
-      if (!item) {
-        item = {
-          author,
-          count: 0,
-        }
-        result.push(item)
-      }
+const handleReply = (reply: Reply, authorCounts: AuthorCount[]) => {
+  let authorCount = authorCounts.find((ac) => ac.author.login === reply.author.login)
+  if (!authorCount) {
+    authorCount = {
+      author: reply.author,
+      count: 0,
+    }
+    authorCounts.push(authorCount)
+  }
 
-      item.count++
-
-      return result
-    },
-    []
-  )
+  authorCount.count++
 }
 
-const byCount = (a: Count, b: Count) => {
+const filterAnswers = (comments: Comment[]): AuthorCount[] => {
+  const authorCounts: AuthorCount[] = []
+
+  for (const comment of comments) {
+    if (comment.isAnswer) {
+      console.log(`${comment.author.login} answered using a comment in ${comment.discussion.number}`)
+      handleComment(comment, authorCounts)
+    }
+
+    for (const reply of comment.replies) {
+      if (reply.isAnswer) {
+        console.log(`${reply.author.login} answered using a reply in ${reply.discussion.number}`)
+        handleReply(reply, authorCounts)
+      }
+    }
+  }
+
+  return authorCounts
+}
+
+const filterInteractions = (comments: Comment[]): AuthorCount[] => {
+  const authorCounts: AuthorCount[] = []
+
+  for (const comment of comments) {
+    handleComment(comment, authorCounts)
+
+    for (const reply of comment.replies) {
+      handleReply(reply, authorCounts)
+    }
+  }
+
+  return authorCounts
+}
+
+const byCount = (a: AuthorCount, b: AuthorCount) => {
   return b.count - a.count || a.author.login.localeCompare(b.author.login)
 }
 
-const createBody = (answers: Count[], interactions: Count[]) => {
+const createBody = (answers: AuthorCount[], interactions: AuthorCount[]) => {
   return [
     "# Let's celebrate our contributors!",
     "",
