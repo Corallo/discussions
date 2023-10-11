@@ -1,4 +1,5 @@
 import { Author, Comment, Reply, listComments } from "./src/list-comments"
+import { listMemberLogins } from "./src/list-member-logins"
 import { updateDiscussion } from "./src/update-discussion"
 
 export const ORGANIZATION_NAME = "AxisCommunications"
@@ -69,6 +70,7 @@ const filterAnswers = (comments: Comment[]): AuthorCount[] => {
     }
   }
 
+  console.log()
   return authorCounts
 }
 
@@ -90,7 +92,7 @@ const byCount = (a: AuthorCount, b: AuthorCount) => {
   return b.count - a.count || a.author.login.localeCompare(b.author.login)
 }
 
-const createBody = (answers: AuthorCount[], interactions: AuthorCount[]) => {
+const createBody = (answers: AuthorCount[], interactions: AuthorCount[], memberLogins: Set<string>) => {
   return [
     "# Let's celebrate our contributors!",
     "",
@@ -104,7 +106,10 @@ const createBody = (answers: AuthorCount[], interactions: AuthorCount[]) => {
     "| :------: | ----------- | :--------------------: |",
     ...interactions.map((interaction, i) => {
       const { author, count } = interaction
-      return `| ${i + 1} | [${author.login}](https://github.com${author.resourcePath}) | ${count} |`
+
+      return memberLogins.has(author.login)
+        ? `| ${i + 1} | [${author.login}](https://github.com${author.resourcePath}) (member) | ${count} |`
+        : `| ${i + 1} | [${author.login}](https://github.com${author.resourcePath}) | ${count} |`
     }),
     "",
     "## Most helpful with providing answers",
@@ -115,7 +120,9 @@ const createBody = (answers: AuthorCount[], interactions: AuthorCount[]) => {
     "| :------: | ----------- | :---------------: |",
     ...answers.map((answer, i) => {
       const { author, count } = answer
-      return `| ${i + 1} | [${author.login}](https://github.com${author.resourcePath}) | ${count} |`
+      return memberLogins.has(author.login)
+        ? `| ${i + 1} | [${author.login}](https://github.com${author.resourcePath}) (member) | ${count} |`
+        : `| ${i + 1} | [${author.login}](https://github.com${author.resourcePath}) | ${count} |`
     }),
     "",
     "---",
@@ -138,7 +145,11 @@ const main = async () => {
   const answers = filterAnswers(comments).sort(byCount).splice(0, 20)
   const interactions = filterInteractions(comments).sort(byCount).splice(0, 20)
 
-  const body = createBody(answers, interactions)
+  const memberLogins = await listMemberLogins(ORGANIZATION_NAME, personalAccessToken)
+
+  const body = createBody(answers, interactions, memberLogins)
+  console.log(body)
+
   await updateDiscussion(discussionId, body, personalAccessToken)
 }
 
