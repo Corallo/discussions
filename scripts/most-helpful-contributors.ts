@@ -98,6 +98,8 @@ const createBody = (answers: AuthorCount[], interactions: AuthorCount[], memberL
     "",
     "The users listed in this post are recognized and celebrated for their contributions to the discussions in this GitHub organization.",
     "",
+    "A user marked as *member* is an employee of Axis Communications, thus a member of this GitHub organization.",
+    "",
     "## Most active in discussions",
     "",
     "The following users have been active in discussions. They are valued for their effort in asking for clarification, providing context and in general driving the conversation forward.",
