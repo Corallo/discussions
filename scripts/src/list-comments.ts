@@ -82,9 +82,9 @@ const createQuery = (organizationName: string, repositoryName: string): string =
   return `
     query($cursor: String) {
       repository(owner: "${organizationName}", name: "${repositoryName}") {
-        discussions(first: 100, after: $cursor) {
+        discussions(first: 40, after: $cursor) {
           nodes {
-            comments(first: 20) {
+            comments(first: 100) {
               nodes {
                 discussion {
                   number
@@ -94,7 +94,7 @@ const createQuery = (organizationName: string, repositoryName: string): string =
                   login
                   resourcePath
                 }
-                replies(first: 20) {
+                replies(first: 100) {
                   nodes {
                     discussion {
                       number
