@@ -1,9 +1,10 @@
 import { Author, Comment, Reply, listComments } from "./src/list-comments"
 import { listMemberLogins } from "./src/list-member-logins"
 import { updateDiscussion } from "./src/update-discussion"
+import { Octokit } from "@octokit/rest";
 
 export const ORGANIZATION_NAME = "AxisCommunications"
-export const REPOSITORY_NAME = "discussions"
+
 
 const usage = () => {
   console.log("Error: Unsupported number of arguments")
@@ -141,19 +142,34 @@ const main = async () => {
 
   const [discussionId, personalAccessToken] = args
 
-  let comments = await listComments(ORGANIZATION_NAME, REPOSITORY_NAME, personalAccessToken)
-  comments = removeAuthor(comments, "github-actions")
+ // Use Octokit to interact with the GitHub API
+  const octokit = new Octokit({ auth: personalAccessToken });
 
-  const answers = filterAnswers(comments).sort(byCount).splice(0, 20)
-  const interactions = filterInteractions(comments).sort(byCount).splice(0, 20)
+  // Get all repositories in the organization
+  const repos = await octokit.repos.listForOrg({
+    org: ORGANIZATION_NAME,
+  });
 
-  const memberLogins = await listMemberLogins(ORGANIZATION_NAME, personalAccessToken)
+  // Fetch comments from all repositories
+  const allComments: Comment[] = [];
+  for (const repo of repos.data) {
+    const comments = await listComments(ORGANIZATION_NAME, repo.name, personalAccessToken);
+    allComments.push(...comments);
+  }
 
-  const body = createBody(answers, interactions, memberLogins)
-  console.log(body)
+  // Remove comments from the specified author
+  const commentsWithoutActions = removeAuthor(allComments, "github-actions");
 
-  await updateDiscussion(discussionId, body, personalAccessToken)
-}
+  const answers = filterAnswers(commentsWithoutActions).sort(byCount).splice(0, 20);
+  const interactions = filterInteractions(commentsWithoutActions).sort(byCount).splice(0, 20);
+
+  const memberLogins = await listMemberLogins(ORGANIZATION_NAME, personalAccessToken);
+
+  const body = createBody(answers, interactions, memberLogins);
+  console.log(body);
+
+  await updateDiscussion(discussionId, body, personalAccessToken);
+};
 
 ;(async () => {
   await main()
